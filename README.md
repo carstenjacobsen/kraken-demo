@@ -3,7 +3,6 @@
 A Node.js web app for managing a [Kraken](https://kraken.com) account via the Kraken REST API. View balances, send crypto to saved withdrawal addresses, and generate deposit addresses with scannable QR codes.
 
 ![Kraken Demo](docs/kraken-demo.png)
----
 
 ## Features
 
