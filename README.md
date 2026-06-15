@@ -133,7 +133,8 @@ node index.js send                  # Interactive send flow
 ## Security Notes
 
 > [!WARNING]
-> Critical content demanding immediate user attention due to potential risks.
+> This software is currently in an experimental phase. Use at your own risk. The author is not responsible for any data loss, system instability, or financial damages caused by this code.
+
 
 
 - API credentials are read from `.env` and never exposed to the browser
