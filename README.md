@@ -132,6 +132,10 @@ node index.js send                  # Interactive send flow
 
 ## Security Notes
 
+> [!WARNING]
+> Critical content demanding immediate user attention due to potential risks.
+
+
 - API credentials are read from `.env` and never exposed to the browser
 - The `.env` file is not included in the repo — keep it out of version control
 - All Kraken API requests are signed server-side using HMAC-SHA512
