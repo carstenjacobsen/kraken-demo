@@ -1,5 +1,5 @@
 > [!WARNING]
-> This software is currently in an experimental phase. Use at your own risk. The authors are not responsible for any data loss, system instability, or financial damages caused by this code.
+> This software is currently in an experimental phase. Use at your own risk. The author is not responsible for any data loss, system instability, or financial damages caused by this code.
 # Kraken Demo
 
 A Node.js web app for managing a [Kraken](https://kraken.com) account via the Kraken REST API. View balances, send crypto to saved withdrawal addresses, and generate deposit addresses with scannable QR codes.
