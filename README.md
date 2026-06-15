@@ -1,11 +1,6 @@
 # Kraken Demo
-This repository contains a demo of how to use the Kraken REST API to create a simple
-
-# Kraken Demo
 
 A Node.js web app for managing a [Kraken](https://kraken.com) account via the Kraken REST API. View balances, send crypto to saved withdrawal addresses, and generate deposit addresses with scannable QR codes.
-
-![Node.js](https://img.shields.io/badge/Node.js-18%2B-green) ![License](https://img.shields.io/badge/license-MIT-blue)
 
 ---
 
