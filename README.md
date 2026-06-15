@@ -4,6 +4,10 @@ A Node.js web app for managing a [Kraken](https://kraken.com) account via the Kr
 
 ![Kraken Demo](docs/kraken-demo.png)
 
+> [!WARNING]
+> This software is currently in an experimental phase. Use at your own risk. The authors are not responsible for any data loss, system instability, or financial damages caused by this code.
+
+
 ## Features
 
 - **Balances** — View all non-zero holdings grouped by crypto and fiat/stablecoin
