@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kraken Demo</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d0f;
+      --surface: #16181d;
+      --border: #2a2d35;
+      --accent: #5c6bc0;
+      --accent-hover: #7986cb;
+      --green: #26a69a;
+      --red: #ef5350;
+      --text: #e8eaf0;
+      --muted: #6b7280;
+      --radius: 10px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 32px 24px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo svg { width: 32px; height: 32px; }
+
+    h1 { font-size: 1.4rem; font-weight: 600; letter-spacing: -0.3px; }
+
+    .refresh-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 16px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: border-color 0.15s;
+    }
+    .refresh-btn:hover { border-color: var(--accent); }
+    .refresh-btn.spinning svg { animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* Balances */
+    .balance-list { padding: 8px 0; }
+
+    .balance-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      transition: background 0.1s;
+    }
+    .balance-row:hover { background: rgba(255,255,255,0.03); }
+
+    .asset-info { display: flex; align-items: center; gap: 12px; }
+
+    .asset-icon {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .asset-name { font-weight: 500; font-size: 0.95rem; }
+    .asset-label { font-size: 0.75rem; color: var(--muted); margin-top: 1px; }
+    .asset-amount { font-variant-numeric: tabular-nums; font-size: 0.95rem; }
+
+    /* Send form */
+    .send-form { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+
+    .field label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+
+    .field input, .field select {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      padding: 9px 12px;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.15s;
+      appearance: none;
+    }
+    .field input:focus, .field select:focus { border-color: var(--accent); }
+    .field select option { background: var(--bg); }
+
+    .send-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 11px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+      margin-top: 4px;
+    }
+    .send-btn:hover { background: var(--accent-hover); }
+    .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Address preview */
+    .addr-preview {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      word-break: break-all;
+      min-height: 38px;
+    }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 28px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 20px;
+      font-size: 0.88rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+      max-width: 400px;
+      text-align: center;
+      z-index: 100;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #toast.success { border-color: var(--green); color: var(--green); }
+    #toast.error { border-color: var(--red); color: var(--red); }
+
+    /* States */
+    .empty { padding: 32px 20px; text-align: center; color: var(--muted); font-size: 0.9rem; }
+    .skeleton {
+      background: linear-gradient(90deg, var(--border) 25%, #2f3340 50%, var(--border) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s infinite;
+      border-radius: 4px; height: 14px;
+    }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+
+    .skel-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 20px;
+    }
+    .skel-left { display: flex; gap: 12px; align-items: center; }
+    .skel-circle { width: 32px; height: 32px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
+    .skel-text { display: flex; flex-direction: column; gap: 6px; }
+
+    /* Deposit */
+    .deposit-form { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+
+    .deposit-address-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .deposit-address-box.visible { display: flex; }
+
+    .deposit-addr-text {
+      font-size: 0.78rem;
+      word-break: break-all;
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .deposit-meta {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .copy-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 7px 14px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      align-self: flex-start;
+      transition: border-color 0.15s;
+    }
+    .copy-btn:hover { border-color: var(--accent); }
+    .copy-btn.copied { color: var(--green); border-color: var(--green); }
+
+    .get-addr-btn {
+      background: var(--green);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 11px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      margin-top: 4px;
+    }
+    .get-addr-btn:hover { opacity: 0.85; }
+    .get-addr-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .network-tag {
+      display: inline-block;
+      background: rgba(92,107,192,0.15);
+      border: 1px solid rgba(92,107,192,0.3);
+      color: var(--accent-hover);
+      border-radius: 4px;
+      padding: 2px 7px;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+
+    /* Tabs */
+    .tab-bar {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      padding: 14px 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color 0.15s, border-color 0.15s;
+      letter-spacing: 0.02em;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--text); border-bottom-color: var(--accent); }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      padding-bottom: 32px;
+    }
+
+    footer a {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: color 0.15s;
+    }
+    footer a:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="32" height="32" rx="8" fill="#5c6bc0"/>
+      <path d="M9 8h3v7.5l7-7.5h4l-7.5 8L23.5 24h-4l-7-8V24H9V8z" fill="white"/>
+    </svg>
+    <h1>Kraken Demo</h1>
+  </div>
+  <button class="refresh-btn" id="refreshBtn" onclick="loadBalances()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+    </svg>
+    Refresh
+  </button>
+</header>
+
+<div class="grid">
+  <div class="card">
+    <div class="card-header">Balances</div>
+    <div class="balance-list" id="balanceList">
+      <div class="skel-row"><div class="skel-left"><div class="skel-circle"></div><div class="skel-text"><div class="skeleton" style="width:60px"></div><div class="skeleton" style="width:40px"></div></div></div><div class="skeleton" style="width:80px"></div></div>
+      <div class="skel-row"><div class="skel-left"><div class="skel-circle"></div><div class="skel-text"><div class="skeleton" style="width:50px"></div><div class="skeleton" style="width:35px"></div></div></div><div class="skeleton" style="width:70px"></div></div>
+      <div class="skel-row"><div class="skel-left"><div class="skel-circle"></div><div class="skel-text"><div class="skeleton" style="width:55px"></div><div class="skeleton" style="width:45px"></div></div></div><div class="skeleton" style="width:90px"></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('send', this)">Send</button>
+      <button class="tab-btn" onclick="switchTab('deposit', this)">Deposit</button>
+    </div>
+
+    <div id="tab-send" class="tab-panel active">
+      <div class="send-form">
+        <div class="field">
+          <label>Asset</label>
+          <input id="sendAsset" type="text" placeholder="e.g. ETH, XBT, USDC" oninput="onAssetInput()" />
+        </div>
+        <div class="field">
+          <label>Withdrawal Address</label>
+          <select id="addrSelect" onchange="onAddressChange()">
+            <option value="">— enter asset first —</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Address</label>
+          <div class="addr-preview" id="addrPreview">—</div>
+        </div>
+        <div class="field">
+          <label>Amount</label>
+          <input id="sendAmount" type="number" placeholder="0.00" min="0" step="any" />
+        </div>
+        <button class="send-btn" id="sendBtn" onclick="submitWithdraw()">Send</button>
+      </div>
+    </div>
+
+    <div id="tab-deposit" class="tab-panel">
+      <div class="deposit-form">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="field">
+            <label>Asset</label>
+            <input id="depAsset" type="text" placeholder="e.g. ETH, XBT, ZUSD" oninput="onDepAssetInput()" />
+          </div>
+          <div class="field">
+            <label>Network / Method</label>
+            <select id="depMethod" onchange="onDepMethodChange()">
+              <option value="">— enter asset first —</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="deposit-address-box" id="depAddressBox">
+          <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
+            <img id="depQR" style="border-radius:8px;flex-shrink:0;width:148px;height:148px;" alt="Deposit QR code" />
+            <div style="display:flex;flex-direction:column;gap:10px;flex:1;min-width:0;">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <span class="network-tag" id="depNetworkTag"></span>
+                <span class="deposit-meta" id="depMinConfirm"></span>
+              </div>
+              <div class="deposit-addr-text" id="depAddrText"></div>
+              <div class="deposit-meta" id="depMemo" style="display:none"></div>
+              <button class="copy-btn" id="copyBtn" onclick="copyAddress()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                Copy Address
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <button class="get-addr-btn" id="getAddrBtn" onclick="fetchDepositAddress()">Get Deposit Address</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<footer>
+  <a href="https://github.com/carstenjacobsen/kraken-demo" target="_blank" rel="noopener">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+    </svg>
+    carstenjacobsen/kraken-demo
+  </a>
+</footer>
+
+<script>
+  const FIAT_LIKE = new Set(['ZUSD','ZEUR','ZGBP','ZCAD','ZJPY','ZAUD','USD','EUR','USDC','USDT','DAI']);
+  const ASSET_COLORS = {
+    XBT: '#f7931a', ETH: '#627eea', USDT: '#26a17b', USDC: '#2775ca',
+    SOL: '#9945ff', XRP: '#00aae4', ADA: '#0033ad', DOT: '#e6007a',
+    LINK: '#375bd2', LTC: '#bfbbbb', BCH: '#8dc351', ZUSD: '#26a69a',
+    ZEUR: '#003399', USD: '#26a69a', EUR: '#003399', DAI: '#f5ac37',
+  };
+
+  function assetColor(asset) {
+    return ASSET_COLORS[asset] || '#5c6bc0';
+  }
+
+  function assetInitials(asset) {
+    const clean = asset.replace(/^[XZ]/, '');
+    return clean.slice(0, 3);
+  }
+
+  function formatAmount(amount, asset) {
+    if (FIAT_LIKE.has(asset)) return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (amount < 0.0001) return amount.toExponential(4);
+    return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 });
+  }
+
+  function assetLabel(asset) {
+    if (FIAT_LIKE.has(asset)) return 'Stablecoin / Fiat';
+    return 'Crypto';
+  }
+
+  async function loadBalances() {
+    const btn = document.getElementById('refreshBtn');
+    btn.classList.add('spinning');
+    try {
+      const res = await fetch('/api/balances');
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      renderBalances(data);
+    } catch (e) {
+      document.getElementById('balanceList').innerHTML = `<div class="empty">Error: ${e.message}</div>`;
+    } finally {
+      btn.classList.remove('spinning');
+    }
+  }
+
+  function renderBalances(balances) {
+    const el = document.getElementById('balanceList');
+    if (balances.length === 0) {
+      el.innerHTML = '<div class="empty">No balances found</div>';
+      return;
+    }
+    el.innerHTML = balances.map(({ asset, amount }) => `
+      <div class="balance-row">
+        <div class="asset-info">
+          <div class="asset-icon" style="background:${assetColor(asset)}">${assetInitials(asset)}</div>
+          <div>
+            <div class="asset-name">${asset}</div>
+            <div class="asset-label">${assetLabel(asset)}</div>
+          </div>
+        </div>
+        <div class="asset-amount">${formatAmount(amount, asset)}</div>
+      </div>
+    `).join('');
+  }
+
+  let addrFetchTimer;
+  function onAssetInput() {
+    clearTimeout(addrFetchTimer);
+    const asset = document.getElementById('sendAsset').value.trim();
+    const sel = document.getElementById('addrSelect');
+    sel.innerHTML = '<option value="">Loading...</option>';
+    document.getElementById('addrPreview').textContent = '—';
+    if (!asset) { sel.innerHTML = '<option value="">— enter asset first —</option>'; return; }
+    addrFetchTimer = setTimeout(() => loadAddresses(asset), 500);
+  }
+
+  async function loadAddresses(asset) {
+    const sel = document.getElementById('addrSelect');
+    try {
+      const res = await fetch(`/api/addresses?asset=${encodeURIComponent(asset)}`);
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      if (data.length === 0) {
+        sel.innerHTML = '<option value="">No saved addresses for this asset</option>';
+        return;
+      }
+      sel.innerHTML = '<option value="">— select address —</option>' +
+        data.map(a => `<option value="${a.key}" data-address="${a.address}" data-memo="${a.memo || ''}">${a.key}</option>`).join('');
+    } catch (e) {
+      sel.innerHTML = `<option value="">Error: ${e.message}</option>`;
+    }
+  }
+
+  function onAddressChange() {
+    const sel = document.getElementById('addrSelect');
+    const opt = sel.selectedOptions[0];
+    const preview = document.getElementById('addrPreview');
+    if (!opt || !opt.dataset.address) { preview.textContent = '—'; return; }
+    const memo = opt.dataset.memo ? ` (memo: ${opt.dataset.memo})` : '';
+    preview.textContent = opt.dataset.address + memo;
+  }
+
+  async function submitWithdraw() {
+    const asset = document.getElementById('sendAsset').value.trim();
+    const key = document.getElementById('addrSelect').value;
+    const amount = document.getElementById('sendAmount').value.trim();
+    const btn = document.getElementById('sendBtn');
+
+    if (!asset || !key || !amount) { showToast('Please fill in all fields', 'error'); return; }
+
+    const preview = document.getElementById('addrPreview').textContent;
+    if (!confirm(`Send ${amount} ${asset} to:\n${preview}\n\nConfirm?`)) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    try {
+      const res = await fetch('/api/withdraw', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ asset, key, amount }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      showToast(`Withdrawal submitted — Ref: ${data.refid}`, 'success');
+      document.getElementById('sendAmount').value = '';
+    } catch (e) {
+      showToast(`Error: ${e.message}`, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Send';
+    }
+  }
+
+  function showToast(msg, type = '') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `show ${type}`;
+    setTimeout(() => t.className = '', 4000);
+  }
+
+  // ── Deposit ────────────────────────────────────────────────────────────────
+
+  let depMethodFetchTimer;
+  let depMethods = [];
+
+  function onDepAssetInput() {
+    clearTimeout(depMethodFetchTimer);
+    const asset = document.getElementById('depAsset').value.trim();
+    const sel = document.getElementById('depMethod');
+    sel.innerHTML = '<option value="">Loading...</option>';
+    hideDepositBox();
+    if (!asset) { sel.innerHTML = '<option value="">— enter asset first —</option>'; return; }
+    depMethodFetchTimer = setTimeout(() => loadDepositMethods(asset), 500);
+  }
+
+  async function loadDepositMethods(asset) {
+    const sel = document.getElementById('depMethod');
+    try {
+      const res = await fetch(`/api/deposit-methods?asset=${encodeURIComponent(asset)}`);
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      depMethods = data;
+      if (data.length === 0) {
+        sel.innerHTML = '<option value="">No deposit methods available</option>';
+        return;
+      }
+      sel.innerHTML = data.map(m =>
+        `<option value="${m.method}">${m.method}${m.network ? ' — ' + m.network : ''}</option>`
+      ).join('');
+    } catch (e) {
+      sel.innerHTML = `<option value="">Error: ${e.message}</option>`;
+    }
+  }
+
+  function onDepMethodChange() {
+    hideDepositBox();
+  }
+
+  async function fetchDepositAddress() {
+    const asset = document.getElementById('depAsset').value.trim();
+    const method = document.getElementById('depMethod').value;
+    const btn = document.getElementById('getAddrBtn');
+    if (!asset || !method) { showToast('Select an asset and network first', 'error'); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Fetching…';
+    hideDepositBox();
+
+    try {
+      const res = await fetch(`/api/deposit-address?asset=${encodeURIComponent(asset)}&method=${encodeURIComponent(method)}`);
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      if (!data.length) throw new Error('No deposit address returned');
+
+      const entry = data[0];
+      const methodInfo = depMethods.find(m => m.method === method) || {};
+
+      document.getElementById('depAddrText').textContent = entry.address;
+      document.getElementById('depNetworkTag').textContent = methodInfo.network || method;
+
+      const minConf = methodInfo['gen-address'] ? '' :
+        (methodInfo.limit ? `Min deposit: ${methodInfo.limit}` : '');
+      document.getElementById('depMinConfirm').textContent = minConf;
+
+      const memoEl = document.getElementById('depMemo');
+      if (entry.tag || entry.memo) {
+        memoEl.textContent = `Memo / Tag: ${entry.tag || entry.memo}`;
+        memoEl.style.display = 'block';
+      } else {
+        memoEl.style.display = 'none';
+      }
+
+      const qrRes = await fetch(`/api/qr?data=${encodeURIComponent(entry.address)}`);
+      const qrData = await qrRes.json();
+      document.getElementById('depQR').src = qrData.url;
+
+      document.getElementById('depAddressBox').classList.add('visible');
+      document.getElementById('copyBtn').classList.remove('copied');
+      document.getElementById('copyBtn').innerHTML = `
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        </svg>
+        Copy Address`;
+    } catch (e) {
+      showToast(`Error: ${e.message}`, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Get Deposit Address';
+    }
+  }
+
+  function hideDepositBox() {
+    document.getElementById('depAddressBox').classList.remove('visible');
+  }
+
+  function copyAddress() {
+    const addr = document.getElementById('depAddrText').textContent;
+    navigator.clipboard.writeText(addr).then(() => {
+      const btn = document.getElementById('copyBtn');
+      btn.classList.add('copied');
+      btn.innerHTML = `
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Copied!`;
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.innerHTML = `
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+          Copy Address`;
+      }, 2000);
+    });
+  }
+
+  function switchTab(name, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + name).classList.add('active');
+  }
+
+  loadBalances();
+</script>
+</body>
+</html>
