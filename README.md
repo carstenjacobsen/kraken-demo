@@ -12,6 +12,11 @@ A Node.js web app for managing a [Kraken](https://kraken.com) account via the Kr
 - **Send** — Withdraw crypto to a pre-registered withdrawal address
 - **Deposit** — Get a deposit address for any asset and network, with a QR code ready to scan from Coinbase, Trust Wallet, or any other mobile app
 
+
+[<kbd>  ★ Star Repository  </kbd>](https://github.com)
+[<kbd>  ⑂ Fork Project  </kbd>](https://github.com/fork)
+
+
 ---
 
 ## Requirements
