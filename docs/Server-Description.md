@@ -3,7 +3,7 @@
 ## Utilities
 
 
-### `getSignature()
+### `getSignature()`
 
 ```js
 function getSignature(urlPath, params, secret) {
