@@ -12,11 +12,6 @@ A Node.js web app for managing a [Kraken](https://kraken.com) account via the Kr
 - **Send** — Withdraw crypto to a pre-registered withdrawal address
 - **Deposit** — Get a deposit address for any asset and network, with a QR code ready to scan from Coinbase, Trust Wallet, or any other mobile app
 
-
-[<kbd>  ★ Star Repository  </kbd>](https://github.com)
-[<kbd>  ⑂ Fork Project  </kbd>](https://github.com/fork)
-
-
 ---
 
 ## Requirements
@@ -98,18 +93,6 @@ The dashboard loads your current Kraken balances automatically on startup. Click
 
 ---
 
-## Project Structure
-
-```
-kraken-demo/
-├── server.js          # Express server and Kraken API integration
-├── index.js           # CLI version (balances + send)
-├── public/
-│   └── index.html     # Single-page web UI
-├── .env.example       # Environment variable template
-└── package.json
-```
-
 ### API Endpoints
 
 | Method | Path | Description |
@@ -123,17 +106,17 @@ kraken-demo/
 
 ---
 
-## CLI Usage
+## Project Structure
 
-A command-line interface is also available without starting the web server:
-
-```bash
-node index.js                       # Show balances
-node index.js balances              # Show balances
-node index.js addresses             # List all saved withdrawal addresses
-node index.js addresses ETH         # List addresses for a specific asset
-node index.js send                  # Interactive send flow
 ```
+kraken-demo/
+├── server.js          # Express server and Kraken API integration
+├── public/
+│   └── index.html     # Single-page web UI
+├── .env.example       # Environment variable template
+└── package.json
+```
+
 
 ---
 
