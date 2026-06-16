@@ -93,6 +93,10 @@ The dashboard loads your current Kraken balances automatically on startup. Click
 
 ---
 
+## Server
+
+The server code
+
 ### API Endpoints
 
 | Method | Path | Description |
